@@ -25,7 +25,7 @@ tsgeval:
 	EVALB/evalb $(GOLD) $(TSGOUT)
 
 tagparse:
-	bin/parse $(TAGGRAMT) 1 $(TOPARSE) $(TAGOUT) x
+	bin/parse $(TAGGRAMT) 1 $(TOPARSE) $(TAGOUT) $(PCFG)
 
 tageval:
 	EVALB/evalb $(GOLD) $(TAGOUT)
