@@ -60,6 +60,24 @@ struct TreeNode {
     
 };
 
+
+struct EvalItem {
+
+    std::string sym;
+    unsigned int i,j;
+    double prob;
+    
+    EvalItem(std::string sym_, unsigned int i_, unsigned int j_, double prob_) : sym(sym_), i(i_), j(j_), prob(prob_) {
+        
+    }
+
+    bool operator==(EvalItem& o) {
+        return sym == o.sym && i == o.i && j == o.j;
+    }
+        
+    
+};
+
 struct ParseTree {
 
     ParseTree(string s, S2Imap sym2base, unsigned int glueS) {
@@ -178,11 +196,39 @@ struct ParseTree {
     bool isPCFG() {
         return depth() == 1;
     }
+
+    std::pair<std::vector<EvalItem>,unsigned int> getEItems(TreeNode* node, string* syms) {
+        
+        std::vector<EvalItem> ret;
+        
+        if(node->k.size() == 0) {
+            EvalItem e(syms[node->sym],0,0,1.0);
+            ret.push_back(e);
+            return make_pair(ret,1);
+        } else {
+            unsigned int tot = 0;
+            for(size_t i=0;i<node->k.size();++i) {
+                TreeNode* kk = node->k[i];
+                pair< vector< EvalItem >, unsigned int> res = getEItems(kk,syms);
+                for(size_t j=0;j<res.first.size();++j) {
+                    EvalItem& ee = res.first[j];
+                    ee.j += tot;
+                    ret.push_back(ee);
+                }
+                tot += res.second;
+            }
+            
+            EvalItem e(syms[node->sym],tot-1,0,1.0);
+            ret.push_back(e);
+            return make_pair(ret,tot);
+        }
+        
+    }
     
     TreeNode* root;
     vector<string> terms;
 };
-    
+
 
 class BucketGrammar {
 public:

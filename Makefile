@@ -10,9 +10,13 @@ TSGOUT=$(OSTAG)tsgout.txt
 TAGOUT=$(OSTAG)tagout.txt
 TRAIN=$(OSTAG)train.txt.unk
 PCFG=$(OSTAG)train.pcfg.txt
+MEMODEL=$(OSTAG)memodel
+
+clean:
+	make -C src clean
 
 all:
-	make -C src/ec/. ecall
+#	make -C src/ec/. ecall
 	make -C src/. bsall
 
 pcfg:
@@ -20,6 +24,9 @@ pcfg:
 
 tsgparse:
 	bin/parse $(TSGGRAM) 0 $(TOPARSE) $(TSGOUT) $(PCFG)
+
+vg:
+	valgrind --leak-check=full bin/parse $(TSGGRAM) 0 $(TOPARSE) $(TSGOUT) $(PCFG)
 
 tsgeval:
 	EVALB/evalb $(GOLD) $(TSGOUT)
@@ -42,4 +49,8 @@ em2:
 trim:
 	bin/trim $(TAGGRAME)2 $(TAGGRAMT)2
 
+trainme:
+	bin/trainme $(PCFG) $(TRAIN) $(MEMODEL)
 
+testme:
+	bin/testme $(PCFG) $(MEMODEL) $(GOLDB)

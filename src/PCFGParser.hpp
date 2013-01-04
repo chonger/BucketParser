@@ -58,7 +58,7 @@ struct PChart {
             }
             delete[] cells[i];
         }
-        delete cells;
+        delete[] cells;
     }
 
     void print(string* syms) {
@@ -77,7 +77,23 @@ struct PChart {
         }
     }
 
-    
+    vector<EvalItem> getEItems(string* syms) {
+        vector<EvalItem> predict;
+        for(int i=0;i<size;++i) {
+            int rowS = size-i;
+            for(int j=0;j<rowS;++j) {
+                PCell& pc = cells[i][j];
+                if(!pc.empty()) {
+                    for(PCell::iterator iter = pc.begin();iter != pc.end();++iter) {
+                        PData* d = iter->second;
+                        EvalItem e(syms[d->sym],i,j,d->prob);
+                        predict.push_back(e);
+                    }
+                }
+            }
+        }
+        return predict;
+    }
     
     void clean() {
         for(int i=0;i<size;++i) {
@@ -89,6 +105,7 @@ struct PChart {
                         PData* d = iter->second;
                         if(d->prob <= 0.0) {
                             pc.erase(iter->first);
+                            delete d;
                         }
                     }
                 }

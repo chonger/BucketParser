@@ -314,8 +314,7 @@ public:
         int c = 0;
         for(vector<ParseTree*>::iterator iter = trainTreez.begin();iter != trainTreez.end();++iter) {
             c++;
-            if(c % 1000 == 0)
-                printf(".\n");
+
             //printf("%s\n",gr.toString(*iter).c_str());
             
             EMItem* rootIter = doE(*iter);

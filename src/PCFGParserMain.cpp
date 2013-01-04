@@ -18,50 +18,6 @@ void abortFunc(int sig) {
     }
 }
 
-struct EvalItem {
-
-    std::string sym;
-    unsigned int i,j;
-                    
-    EvalItem(std::string sym_, unsigned int i_, unsigned int j_) : sym(sym_), i(i_), j(j_) {
-        
-    }
-
-    bool operator==(EvalItem& o) {
-        return sym == o.sym && i == o.i && j == o.j;
-    }
-        
-    
-};
-
-std::pair<std::vector<EvalItem>,unsigned int> getEItems(TreeNode* node, string* syms) {
-
-    std::vector<EvalItem> ret;
-
-    if(node->k.size() == 0) {
-        EvalItem e(syms[node->sym],0,0);
-        ret.push_back(e);
-        return make_pair(ret,1);
-    } else {
-        unsigned int tot = 0;
-        for(size_t i=0;i<node->k.size();++i) {
-            TreeNode* kk = node->k[i];
-            pair< vector< EvalItem >, unsigned int> res = getEItems(kk,syms);
-            for(size_t j=0;j<res.first.size();++j) {
-                EvalItem& ee = res.first[j];
-                ee.j += tot;
-                ret.push_back(ee);
-            }
-            tot += res.second;
-        }
-
-        EvalItem e(syms[node->sym],tot-1,0);
-        ret.push_back(e);
-        return make_pair(ret,tot);
-    }
-    
-}
-
 int main(int argc, const char* argv[]) {
 
     signal(SIGABRT,&abortFunc);
@@ -116,14 +72,13 @@ int main(int argc, const char* argv[]) {
                 terms.push_back(t);
             }
 
-            //            printf("%s\n",goldS.c_str());
+
             ParseTree goldTree(goldS,parser.sym2base,parser.nSym);
-            std::vector<EvalItem> gold = getEItems(goldTree.root,parser.syms).first;
+            std::vector<EvalItem> gold = goldTree.getEItems(goldTree.root,parser.syms).first;
             
             PChart* chart = parser.getChart(terms);
             
             std::vector<EvalItem> predict;
-            
             for(int i=0;i<chart->size;++i) {
                 int rowS = chart->size-i;
                 for(int j=0;j<rowS;++j) {
@@ -131,8 +86,8 @@ int main(int argc, const char* argv[]) {
                     if(!pc.empty()) {
                         for(PCell::iterator iter = pc.begin();iter != pc.end();++iter) {
                             PData* d = iter->second;
-                            if(d->prob >= 0.001) {
-                                EvalItem e(parser.syms[d->sym],i,j);
+                            if(d->prob >= .0001) {
+                                EvalItem e(parser.syms[d->sym],i,j,d->prob);
                                 predict.push_back(e);
                             }
                         }
@@ -140,6 +95,7 @@ int main(int argc, const char* argv[]) {
                 }
             }
             /**
+               printf("%s\n",goldS.c_str());
             printf("GOLD\n");
             for(size_t i=0;i<gold.size();++i) {
                 EvalItem& e = gold[i];
