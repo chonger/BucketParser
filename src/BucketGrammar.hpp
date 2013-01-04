@@ -57,13 +57,96 @@ struct TreeNode {
 
     unsigned int sym;
     vector<TreeNode*> k;
+    
 };
 
 struct ParseTree {
+
+    ParseTree(string s, S2Imap sym2base, unsigned int glueS) {
+        stringstream ss(s);
+        root = readNode(ss,sym2base,glueS);
+        terms = getTerms(s);
+    }
+    
     ParseTree(TreeNode* root_, vector<string> terms_) : root(root_), terms(terms_) {
         
     }
 
+    vector<string> getTerms(string& s) {
+        vector<string> terms;
+        stringstream ss(s);
+        string w;
+        while(ss.good()) {
+            ss >> w;
+            if(w[0] != '(') {
+                //printf("got %s\n",w.c_str());
+                string tok = w.substr(0,w.find_first_of(')'));
+                if(tok != "<>") {
+                    //printf("--- %s\n",tok.c_str());
+                    terms.push_back(tok);
+                }
+                
+            }
+        }
+        return terms;
+    }
+
+    TreeNode* readNode(stringstream& ss, S2Imap& sym2base, unsigned int glueS) {
+        char c;
+        ss >> c;
+        assert(c == '(');
+
+        string sym = "";
+        ss >> sym;
+        unsigned int symI = sym2base[sym];
+        
+        vector<TreeNode*> kids;
+        
+        while(true) {
+            c = ss.peek();
+            if(c == ' ') { //it's a space
+                ss.ignore(1); //ignore that space
+            } else if(c == '(') { //nonterminal
+                //get child node index
+                TreeNode* kid = readNode(ss,sym2base,glueS);
+                kids.push_back(kid);                
+            } else if (c == ')') {
+                ss.ignore(1); //burn closing paren
+                //      printf("Finished Rule with sym %s and %lu kids\n",sym.c_str(),kids.size()-1);
+
+                
+                while(kids.size() > 2) { //try to add glue rule
+                    //  printf("K = %lu\n",kids.size());
+                    TreeNode* r = kids.back();
+                    kids.pop_back();
+                    TreeNode* l = kids.back();
+                    kids.pop_back();
+                    unsigned int glueI = glueS;
+                    vector<TreeNode*> nKids;
+                    nKids.push_back(l);
+                    nKids.push_back(r);
+                    
+                    kids.push_back(new TreeNode(glueI,nKids));
+                }
+
+                return new TreeNode(symI,kids);
+                
+            } else { //terminal
+                string term = "";
+                while(ss.peek() != ')') {
+                    term += ss.get();
+                }
+                //                printf("got terminal %s\n",term.c_str());
+                ss.ignore(1); //burn closing paren
+                vector<TreeNode*> noKids;
+                return new TreeNode(symI,noKids);
+            }
+        }
+        return NULL;
+    }
+
+
+    
     ~ParseTree() {
         delete root;
     }

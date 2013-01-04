@@ -38,21 +38,21 @@ int main(int argc, const char* argv[]) {
     const char* toparseFilename = argv[3];
     const char* outputFilename = argv[4];
 
+
     bool ctf = false;
-    if(argc == 6)
+    PCFGParser* pparser = NULL;
+    if(argc == 6) {
+        const char* pcfgFilename = argv[5];
         ctf = true;
     
-    /**    
-    std::ifstream ifs(grammarFilename);
-    if(!ifs.is_open()) {
-        printf("Invalid file at %s\n",grammarFilename);
-        exit(-2);
+        std::ifstream pcfgifs(pcfgFilename);
+        if(!pcfgifs.is_open()) {
+            printf("Invalid file at %s\n",pcfgFilename);
+            exit(-2);
+        }
+
+        pparser = new PCFGParser(pcfgifs);
     }
-    */
-    //BucketGrammar g(ifs);
-    //LimitedBucketGrammar g(ifs,toparseFilename);
-    //    BucketParser p(g,nBuckets);
-    //g.dump();
     
     std::ifstream pifs(toparseFilename);
     if(!pifs.is_open()) {
@@ -66,7 +66,7 @@ int main(int argc, const char* argv[]) {
         exit(-2);
     }
     
-    Parser::init("/home/chonger/code/BucketParser/src/ec/DATA/");
+    //Parser::init("/home/chonger/code/BucketParser/src/ec/DATA/");
     
     int c = 0;
     while(pifs.good() && cont) {
@@ -82,9 +82,6 @@ int main(int argc, const char* argv[]) {
                 exit(-2);
             }
 
-
-
-
             //toParse = "The futures halt was even assailed by Big Board floor traders .";
             //toParse = "I ate lunch .";
 
@@ -94,7 +91,7 @@ int main(int argc, const char* argv[]) {
             
             BucketParser* p = NULL;
             if(ctf)
-                p = new CTFBucketParser(g,nBuckets);
+                p = new CTFBucketParser(g,nBuckets,pparser);
             else
                 p = new BucketParser(g,nBuckets);
             //printf("%d PARSING : %s\n",c,toParse.c_str());
@@ -110,7 +107,8 @@ int main(int argc, const char* argv[]) {
         }
     }
 
-    Parser::cleanup();
+    if(ctf)
+        delete pparser;
     
     printf("\n\n\t\tTHANK YOU FOR PLAYING\n\n\t\t\tTHE END\n\n");
     

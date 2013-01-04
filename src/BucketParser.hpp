@@ -7,7 +7,7 @@
 #include <vector>
 #include "BucketGrammar.hpp"
 #include "Chart.hpp"
-#include "ec/Parser.h"
+#include "PCFGParser.hpp"
 
 using namespace std;
 
@@ -493,104 +493,52 @@ private:
     
 };
 
+
+
 class CTFBucketParser : public BucketParser {
 public:
-    CTFBucketParser(BucketGrammar& gr, unsigned char nBuckets) : BucketParser(gr,nBuckets) {        
+    CTFBucketParser(BucketGrammar& gr, unsigned char nBuckets, PCFGParser* pp) : BucketParser(gr,nBuckets), pcfgParser(pp) {        
         
     }
 
     void prefill(vector<string>& terms) {
         
-        ecParser = Parser::parse(terms);
-        /**
-        for(size_t i=1;i<=terms.size();++i) { //length of span
-            for(size_t j=0;j<terms.size();++j) { //span start
-                if(i+j <= terms.size()) {
-                    printf("\nSPAn %d %d\n",j,j+i);
-                    Cell& cl=ecParser->cells[j][j+i];
-        
-                    for(Constits::iterator lter = cl.constits.begin();lter != cl.constits.end();++lter) {
-                        Constit& c = lter->second;
-                        string s = Tree::ntst->toString(c.label);
-                        if(c.io > .0001) {
-                            printf("%s %f\n",s.c_str(),c.io);
-                        }
-                    }
-                    
-                }
-            }
-        }
-        */
+        ctfchart = pcfgParser->getChart(terms);
+
     }
 
     void postfill(vector<string>& terms) {
 
-        delete ecParser;
-        ecParser = NULL;
+        delete ctfchart;
+        ctfchart = NULL;
         
     }
-    /**
-    void finalize(size_t i, size_t j, ChartCell** chart) {
-        ChartCell& cc = chart[i][j];
-          
-        for(CCMap::iterator lter = cc.begin();lter != cc.end();++lter) {
-            unsigned int s = (*lter)->sym;
-
-            //            if(j == 5 || j == 6)
-            //  printf("%s %f\n",gr.syms[gr.baseSym[s]].c_str(),(*lter)->prob);
-            
-            if(gr.canL[s])
-                cc.goodL.push_back(*lter);
-            if(gr.canR[s]) {
-                cc.rlook[s].push_back(*lter);
-                cc.goodR.push_back(*lter);
-            }
-        }
-    
-    }
-*/
 
     bool insertCheck(size_t i, size_t j, ChartCell** chart, ChartItem* it) {
 
-        //ChartCell& cc = chart[i][j];
         double cut = .0001;
-        //printf("SPAN %d %d \n",j,j+i+1);
         
-        Cell& cl=ecParser->cells[j][j+i+1];
-
-        //HACK!
-        bool hasB = false;
-        for(Constits::iterator lter = cl.constits.begin();lter != cl.constits.end();++lter) {
-            Constit& c = lter->second;
-            string s = Tree::ntst->toString(c.label);
-            //if(s == "AUX" || s == "AUXG")
-            //    return true;
-            if(s[0] == '_')
-                hasB = true;
-        }
+        PCell& cc = ctfchart->cells[i][j];
 
         unsigned int s = it->sym;
         unsigned int bS = gr.baseSym[s];
+        if(bS == gr.nSym*2)
+            return true;
+        if(bS > gr.nSym)
+            bS -= gr.nSym;
         string baseS = gr.syms[bS];
+        unsigned int ctfID = pcfgParser->sym2base[baseS];
 
-        //we can allow starred symbols, becuase we know that they come from the same node label
-        if(gr.ptsyms.count(bS) != 0 || bS == gr.rootSym || (baseS[0] == '@') || bS >= gr.nSym)
+        PCell::iterator findo = cc.find(ctfID);
+        if(findo != cc.end() && findo->second->prob >= cut) {
             return true;
-        if(i == 0 && s == bS)
-            return true;
-        
-        
-        double p = ecParser->prob(baseS,j,j+i+1);
-        
-        bool allow = p >= cut;
-
-        return allow;
+        }
+        return false;
     }
     
 private:
-
-    ChartCell** bChart;    
-    Parser* ecParser; //the backoff parser
+    PChart* ctfchart;
+    PCFGParser* pcfgParser; 
 };
 
 #endif

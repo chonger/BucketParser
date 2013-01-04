@@ -10,29 +10,32 @@ PARSERTEST_OBJS = \
 
 BINDIR=../bin/
 OBJDIR=../obj/
-CORE=BucketParser BucketGrammar BucketEM
+CORE=BucketParser BucketGrammar BucketEM PCFGParser
 PROGS=parse em trim maketag
 ECDIR=ec/
 COREOBJS=$(addsuffix .o,$(addprefix $(OBJDIR),$(CORE))) $(addprefix $(ECDIR),$(PARSERTEST_OBJS))
 LIBS=-lgsl -lgslcblas -lm -pthread -lpthread #-lboost_thread
-INCLUDE=../lib/sparsehash/include
+INCLUDE=-I../lib/sparsehash/include -I/home/chonger/Downloads/maxent-master/src 
 
-#FLAGS=-g
-FLAGS=-O5
+FLAGS=-g
+#FLAGS=-O5
 CXX=g++
 
 $(OBJDIR)%.o: %.cpp %.hpp
-	$(CXX) $(FLAGS) -I$(INCLUDE)  -w -c $< -o $@
+	$(CXX) $(FLAGS) $(INCLUDE)  -w -c $< -o $@
 
 $(OBJDIR)%.o: %.cpp $(COREOBJS)
-	$(CXX) $(FLAGS) -I$(INCLUDE)  -w -c $< -o $@
+	$(CXX) $(FLAGS) $(INCLUDE)  -w -c $< -o $@
 
-bsall: parse em trim maketag
+bsall: parse em trim maketag pcfgtest
 
 clean:
 	rm -f $(OBJDIR)*
 	rm -f $(BINDIR)*
 	make -C ec ecclean
+
+trainme : $(OBJDIR)TrainME.o $(COREOBJS)
+	$(CXX) $(FLAGS)  -w -o $(BINDIR)$@ $< $(COREOBJS)  -L /usr/local/lib -l maxent -lm -lz -lgfortran
 
 parse: $(OBJDIR)BucketParserMain.o $(COREOBJS)
 	$(CXX) $(FLAGS)  $(LIBS) -w -o $(BINDIR)$@ $< $(COREOBJS)
@@ -44,5 +47,8 @@ trim: $(OBJDIR)BucketTrim.o $(COREOBJS)
 	$(CXX) $(FLAGS)  $(LIBS) -w -o $(BINDIR)$@ $< $(COREOBJS)
 
 maketag: $(OBJDIR)MakeTAG.o $(COREOBJS)
+	$(CXX) $(FLAGS)  $(LIBS) -w -o $(BINDIR)$@ $< $(COREOBJS)
+
+pcfgtest: $(OBJDIR)PCFGParserMain.o $(COREOBJS)
 	$(CXX) $(FLAGS)  $(LIBS) -w -o $(BINDIR)$@ $< $(COREOBJS)
 
