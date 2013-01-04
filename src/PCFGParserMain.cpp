@@ -169,8 +169,7 @@ int main(int argc, const char* argv[]) {
             fp += myfp;
             fn += myfn;
             
-            double prec = tp/(tp + fp);
-            double rec = tp/(tp + fn);
+
 
 
             
@@ -179,6 +178,8 @@ int main(int argc, const char* argv[]) {
         }
     }
 
+    double prec = tp/(tp + fp);
+    double rec = tp/(tp + fn);
     printf("P : %f R : %f\n",prec,rec);
     
     printf("\n\n\t\tTHANK YOU FOR PLAYING\n\n\t\t\tTHE END\n\n");
