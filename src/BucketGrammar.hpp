@@ -78,6 +78,8 @@ struct EvalItem {
     
 };
 
+typedef google::dense_hash_map<pair<unsigned int, unsigned int>,vector<EvalItem*>,hash<pair<unsigned int , unsigned int> >,equal_to<pair<unsigned int, unsigned int> > > EvalMap;
+
 struct ParseTree {
 
     ParseTree(string s, S2Imap sym2base, unsigned int glueS) {
@@ -134,6 +136,7 @@ struct ParseTree {
 
                 
                 while(kids.size() > 2) { //try to add glue rule
+
                     //  printf("K = %lu\n",kids.size());
                     TreeNode* r = kids.back();
                     kids.pop_back();
@@ -198,6 +201,8 @@ struct ParseTree {
     }
 
     std::pair<std::vector<EvalItem>,unsigned int> getEItems(TreeNode* node, string* syms) {
+
+
         
         std::vector<EvalItem> ret;
         

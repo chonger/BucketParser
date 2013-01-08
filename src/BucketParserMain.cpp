@@ -70,7 +70,7 @@ int main(int argc, const char* argv[]) {
     
     int c = 0;
     while(pifs.good() && cont) {
-        cont = false;
+        //cont = false;
         q = false;
         c++;
         std::string toParse;

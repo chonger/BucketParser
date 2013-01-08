@@ -17,8 +17,8 @@ COREOBJS=$(addsuffix .o,$(addprefix $(OBJDIR),$(CORE))) #$(addprefix $(ECDIR),$(
 LIBS=-lgsl -lgslcblas -lm -pthread -lpthread #-lboost_thread
 INCLUDE=-I../lib/sparsehash/include -I/home/chonger/Downloads/maxent-master/src 
 
-FLAGS=-g
-#FLAGS=-O5
+#FLAGS=-g
+FLAGS=-O5
 CXX=g++
 
 $(OBJDIR)%.o: %.cpp %.hpp
@@ -27,7 +27,7 @@ $(OBJDIR)%.o: %.cpp %.hpp
 $(OBJDIR)%.o: %.cpp $(COREOBJS)
 	$(CXX) $(FLAGS) $(INCLUDE)  -w -c $< -o $@
 
-bsall: parse em trim maketag pcfgtest
+bsall: parse em trim maketag pcfgtest trainme
 
 clean:
 	rm -f $(OBJDIR)*
@@ -35,7 +35,7 @@ clean:
 	make -C ec ecclean
 
 trainme : $(OBJDIR)TrainME.o $(COREOBJS)
-	$(CXX) $(FLAGS)  -w -o $(BINDIR)$@ $< $(COREOBJS)  -L /usr/local/lib -l maxent -lm -lz -lgfortran
+	$(CXX) $(FLAGS)  -w -o $(BINDIR)$@ $< $(COREOBJS)  
 
 testme : $(OBJDIR)TestME.o $(COREOBJS)
 	$(CXX) $(FLAGS)  -w -o $(BINDIR)$@ $< $(COREOBJS)  -L /usr/local/lib -l maxent -lm -lz -lgfortran

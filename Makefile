@@ -12,12 +12,20 @@ TRAIN=$(OSTAG)train.txt.unk
 PCFG=$(OSTAG)train.pcfg.txt
 MEMODEL=$(OSTAG)memodel
 
-clean:
-	make -C src clean
-
 all:
 #	make -C src/ec/. ecall
 	make -C src/. bsall
+clean:
+	make -C src clean
+
+PTB=/home/chonger/data/PTB/
+PTBTRAIN=$(PTB)train.txt.unk
+PTBPCFG=$(PTB)train.pcfg.txt
+PTBYLD=$(PTB)23.yld
+PTBGOLD=$(PTB)23.txt.unk
+
+pcfgptb:
+	bin/pcfgtest $(PTBPCFG) $(PTBYLD) $(PTBGOLD)
 
 pcfg:
 	bin/pcfgtest $(PCFG) $(TOPARSE) $(GOLDB)
@@ -50,7 +58,7 @@ trim:
 	bin/trim $(TAGGRAME)2 $(TAGGRAMT)2
 
 trainme:
-	bin/trainme $(PCFG) $(TRAIN) $(MEMODEL)
+	bin/trainme $(PTBPCFG) $(PTBTRAIN) $(MEMODEL)
 
 testme:
-	bin/testme $(PCFG) $(MEMODEL) $(GOLDB)
+	bin/testme $(PTBPCFG) $(MEMODEL) $(PTBGOLD)
