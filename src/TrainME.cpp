@@ -29,7 +29,7 @@ int main(int argc, const char* argv[]) {
 
     const char* pcfgFilename = argv[1];
     const char* trainFilename = argv[2];
-    const char*  outputFilename = argv[3];
+    const char* outputFilename = argv[3];
 
 
     
@@ -68,6 +68,7 @@ int main(int argc, const char* argv[]) {
         ++i;
         printf("[%d]\n",i);
         getline(ifs2,goldS);
+        
         //        printf("%s\n",goldS.c_str());
         ParseTree goldTree(goldS,parser.sym2base,parser.nSym);
         vector<EvalItem> gold = goldTree.getEItems(goldTree.root,parser.syms).first;

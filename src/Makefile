@@ -27,7 +27,7 @@ $(OBJDIR)%.o: %.cpp %.hpp
 $(OBJDIR)%.o: %.cpp $(COREOBJS)
 	$(CXX) $(FLAGS) $(INCLUDE)  -w -c $< -o $@
 
-bsall: parse em trim maketag pcfgtest trainme
+bsall: parse em trim maketag pcfgtest trainme testme
 
 clean:
 	rm -f $(OBJDIR)*

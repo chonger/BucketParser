@@ -202,7 +202,6 @@ struct ParseTree {
 
     std::pair<std::vector<EvalItem>,unsigned int> getEItems(TreeNode* node, string* syms) {
 
-
         
         std::vector<EvalItem> ret;
         

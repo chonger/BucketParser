@@ -527,6 +527,8 @@ public:
         if(bS > gr.nSym)
             bS -= gr.nSym;
         string baseS = gr.syms[bS];
+        if(baseS.find('@') == 0)
+            return true;
         unsigned int ctfID = pcfgParser->sym2base[baseS];
 
         PCell::iterator findo = cc.find(ctfID);

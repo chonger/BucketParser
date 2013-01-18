@@ -12,6 +12,7 @@ TRAIN=$(OSTAG)train.txt.unk
 PCFG=$(OSTAG)train.pcfg.txt
 MEMODEL=$(OSTAG)memodel
 
+
 all:
 #	make -C src/ec/. ecall
 	make -C src/. bsall
@@ -19,10 +20,12 @@ clean:
 	make -C src clean
 
 PTB=/home/chonger/data/PTB/
+TESTCTF=$(OSTAG)testCTF
 PTBTRAIN=$(PTB)train.txt.unk
 PTBPCFG=$(PTB)train.pcfg.txt
 PTBYLD=$(PTB)23.yld
 PTBGOLD=$(PTB)23.txt.unk
+PTBGRAM=$(PTB)elifPTSG.txt
 
 pcfgptb:
 	bin/pcfgtest $(PTBPCFG) $(PTBYLD) $(PTBGOLD)
@@ -31,13 +34,13 @@ pcfg:
 	bin/pcfgtest $(PCFG) $(TOPARSE) $(GOLDB)
 
 tsgparse:
-	bin/parse $(TSGGRAM) 0 $(TOPARSE) $(TSGOUT) $(PCFG)
+	bin/parse $(PTBGRAM) 0 $(PTBYLD) $(TSGOUT) $(PTBPCFG)
 
 vg:
 	valgrind --leak-check=full bin/parse $(TSGGRAM) 0 $(TOPARSE) $(TSGOUT) $(PCFG)
 
 tsgeval:
-	EVALB/evalb $(GOLD) $(TSGOUT)
+	EVALB/evalb $(PTBGOLD) $(TSGOUT)
 
 tagparse:
 	bin/parse $(TAGGRAMT) 1 $(TOPARSE) $(TAGOUT) $(PCFG)
@@ -58,7 +61,7 @@ trim:
 	bin/trim $(TAGGRAME)2 $(TAGGRAMT)2
 
 trainme:
-	bin/trainme $(PTBPCFG) $(PTBTRAIN) $(MEMODEL)
+	bin/trainme $(PTBPCFG) $(PTB)23.txt.b.unk $(TESTCTF)
 
 testme:
-	bin/testme $(PTBPCFG) $(MEMODEL) $(PTBGOLD)
+	bin/testme $(TESTCTF) 
