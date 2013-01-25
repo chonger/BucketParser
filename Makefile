@@ -27,6 +27,12 @@ PTBYLD=$(PTB)23.yld
 PTBGOLD=$(PTB)23.txt.unk
 PTBGRAM=$(PTB)elifPTSG.txt
 
+stanparse:
+	bin/parse ~/data/PTB/stanfordTrain.pcfgRAW.txt 0 ~/data/PTB/stan23.yld ~/data/PTB/stanout.txt
+
+staneval:
+	EVALB/evalb ~/data/PTB/23.txt.unk ~/data/PTB/stanout2.txt
+
 pcfgptb:
 	bin/pcfgtest $(PTBPCFG) $(PTBYLD) $(PTBGOLD)
 
