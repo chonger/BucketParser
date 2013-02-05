@@ -267,6 +267,11 @@ public:
             assert(item->kids.size() == 1);
             return getParse(item->kids[0],t);
         }
+        
+        if(gr.tagP.count(sym) > 0 && gr.wrapping.count(sym) > 0) {
+            printf("WRAP! %s",gr.wrapping[sym].c_str());
+        }
+        
         if(gr.tagP.count(sym) > 0 || isB) {
 
             stringstream ret;

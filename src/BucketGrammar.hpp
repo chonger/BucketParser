@@ -111,6 +111,39 @@ struct ParseTree {
         return terms;
     }
 
+    string checkfoot(TreeNode* node, unsigned int ns) {
+
+        if(node->sym >= ns && node->sym < ns*2) //its the foot
+            return "F";
+        
+        vector<TreeNode*>& k = node->k;
+        if(k.size() == 1)
+            return checkfoot(k[0],ns);
+
+        if(k.size() == 0)
+            return "N";
+        
+        assert(k.size() == 2);
+
+        string l = checkfoot(k[0],ns);
+        string r = checkfoot(k[1],ns);
+
+        if(r == "W" || l == "W")
+            return "W";
+        if(l == "F")
+            return "L";
+        if(r == "F")
+            return "R";
+        if(r == "L" || l == "R")
+            return "W";
+        if(l == "L")
+            return "L";
+        if(r == "R")
+            return "R";
+        return "N";
+        
+    }
+    
     TreeNode* readNode(stringstream& ss, S2Imap& sym2base, unsigned int glueS) {
         char c;
         ss >> c;
@@ -201,7 +234,6 @@ struct ParseTree {
     }
 
     std::pair<std::vector<EvalItem>,unsigned int> getEItems(TreeNode* node, string* syms) {
-
         
         std::vector<EvalItem> ret;
         
@@ -466,12 +498,28 @@ public:
         nTAG = strtol(line.c_str(),NULL,0);
         //printf("%u TAG rules\n",nTAG);
         //nTAG = 0;
+
+        //DIAGNOSTIC
+        wrapping.set_empty_key(-1);
+        
         for(int i=0;i<nTAG;++i) {
             if(i>0 && i % 100000 == 0)
                 printf("processed %d so far\n",i);
             getline(ifs,line);
             if(allow(line)) {
+
+
+
+                
                 unsigned int ruleRoot = addRule(line,sym2base,pt2base,goodman);
+
+                //DIAGNOSTIC!!!
+                ParseTree pt(line,sym2base,nSym*2);
+                if(pt.checkfoot(pt.root,nSym) == "W") {
+                    wrapping.insert(make_pair(ruleRoot,line));
+                }
+                //DIAGNOSTIC!!!
+                
                 getline(ifs,line);
                 double prob = atof(line.c_str());
                 tagP[ruleRoot] = prob;
@@ -721,6 +769,12 @@ public:
     vector<vector<unsigned int> > gKids;
     vector<string> tKids;
     set<unsigned int> ptsyms;
+
+    //DIAGNOSTIC!!!
+
+    google::dense_hash_map<unsigned int,string> wrapping;
+
+    //DIAGNOSTIC!!!
     
     void makePrior() {
         getG();

@@ -53,7 +53,7 @@ int main(int argc, const char* argv[]) {
     }
 
     
-    size_t nTrials = 10;
+    size_t nTrials = 1;
     double tp[nTrials];
     double fp[nTrials];
     double fn[nTrials];    
@@ -66,7 +66,8 @@ int main(int argc, const char* argv[]) {
         double exp = i;
         exp += 1.0;
         exp *= -1;
-        cuts[i] = pow(10.0,exp);
+        //cuts[i] = pow(10.0,exp);
+        cuts[i] = 0.0;
     }
 
     
@@ -78,6 +79,7 @@ int main(int argc, const char* argv[]) {
         getline(ifs,toParse);
         getline(gifs,goldS);
 
+        //        printf("%s\n",toParse.c_str());
         iii += 1;
         printf("[%d]\n",iii);
         if(toParse.size() > 0) {
@@ -184,6 +186,28 @@ int main(int argc, const char* argv[]) {
 
                     mytp[j] += found;
                     myfp[j] += ppp.size() - found;
+                    /**
+                    if(found < gs.size()) {
+                        printf("%d %d - \n",k.first,k.second);
+                        for(size_t i=0;i<gs.size();++i) {
+                            EvalItem* e = gs[i];
+                            bool found = false;
+                            for(size_t k=0;k<ppp.size();++k) {
+                                if(ppp[k]->sym == e->sym) {
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            if(!found)
+                                printf("%s ",e->sym.c_str());
+                            else
+                                printf("(%s) ",e->sym.c_str());
+                        }
+                        printf("\n");
+
+                    }
+                    */
+
                 }
             }
 
@@ -209,6 +233,7 @@ int main(int argc, const char* argv[]) {
                 tp[i] += mytp[i];
                 fp[i] += myfp[i];
                 fn[i] += myfn;
+                printf("%f %f %f\n",tp[i],fp[i],fn[i]);
             }
             
             delete chart;
@@ -219,6 +244,7 @@ int main(int argc, const char* argv[]) {
                 printf("%E %f %f\n",cuts[i],prec,rec);
             }
             printf("\n");
+            
         }
     }
 

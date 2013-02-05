@@ -208,6 +208,7 @@ public:
                         fter->second.insert(res);
                     }
                 } else {
+                    printf("this is probably not a binarized pcfg - more than 2 RHS\n");
                     throw "bad rhs size";
                 }
                 
