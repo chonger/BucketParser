@@ -1,4 +1,4 @@
-MOD=20
+MOD=10
 
 PTB=/home/chonger/data/PTB/
 TSGGRAM=$(PTB)trainPTSG.txt$(MOD)

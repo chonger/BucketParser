@@ -515,9 +515,11 @@ public:
 
                 //DIAGNOSTIC!!!
                 ParseTree pt(line,sym2base,nSym*2);
-                if(pt.checkfoot(pt.root,nSym) == "W") {
-                    wrapping.insert(make_pair(ruleRoot,line));
-                }
+                string ty = pt.checkfoot(pt.root,nSym);
+                
+                
+                wrapping.insert(make_pair(ruleRoot,ty + "\t" + line));
+                
                 //DIAGNOSTIC!!!
                 
                 getline(ifs,line);

@@ -268,9 +268,7 @@ public:
             return getParse(item->kids[0],t);
         }
         
-        if(gr.tagP.count(sym) > 0 && gr.wrapping.count(sym) > 0) {
-            printf("WRAP! %s",gr.wrapping[sym].c_str());
-        }
+
         
         if(gr.tagP.count(sym) > 0 || isB) {
 
@@ -292,7 +290,15 @@ public:
         
             ret << "(" << gr.syms[bSym];
 
-            if(item->kids.size() > 0) {            
+            if(item->kids.size() > 0) {
+
+                if(item->buckets.size() < item->kids[0]->buckets.size()) {
+                    unsigned int ksym = item->kids[0]->sym;
+                    if(gr.tagP.count(ksym) > 0 && gr.wrapping.count(ksym) > 0) {
+                        printf("WRAP\t%s\n",gr.wrapping[ksym].c_str());
+                    }
+                }
+                
                 for(size_t i=0;i<item->kids.size();++i) {
                     ret << " " << getParse(item->kids[i],t);
                 }
