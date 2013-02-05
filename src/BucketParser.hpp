@@ -520,13 +520,18 @@ public:
 
     void postfill(vector<string>& terms) {
 
-        delete ctfchart;
-        ctfchart = NULL;
+        if(ctfchart != NULL) {
+            delete ctfchart;
+            ctfchart = NULL;
+        }
         
     }
 
     bool insertCheck(size_t i, size_t j, ChartCell** chart, ChartItem* it) {
 
+        if(ctfchart == NULL)
+            return true;
+        
         double cut = .0001;
         
         PCell& cc = ctfchart->cells[i][j];

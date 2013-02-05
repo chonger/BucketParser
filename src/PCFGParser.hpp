@@ -376,8 +376,9 @@ public:
         PCell& cc = chart->cells[nT-1][0];
         PCell::iterator findo = cc.find(rootSym);
         if(findo == cc.end()) {
-            chart->print(syms);
-            throw "not parsed!";
+            //chart->print(syms);
+            chart->clean();
+            return NULL;
         }
 
         PData* d = findo->second;
