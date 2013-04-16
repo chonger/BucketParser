@@ -263,11 +263,25 @@ public:
         //printf("%s\n",symS.c_str());
         bool isB = symS.find('@') == 0 || symS.find('+') == 0 || symS == "GLUE";
         //bool isB = false;
+
+        
+        if(item->kids.size() > 0 && item->buckets.size() < item->kids[0]->buckets.size()) {
+
+            if(item->buckets.size() > 0)
+                printf("EXTRA\n");
+            
+            unsigned int ksym = item->kids[0]->sym;
+            if(gr.tagP.count(ksym) > 0 && gr.wrapping.count(ksym) > 0) {
+                printf("WRAP\t%s\n",gr.wrapping[ksym].c_str());
+            }
+        }
+        
+        
         if(sym == bSym) {
             assert(item->kids.size() == 1);
             return getParse(item->kids[0],t);
         }
-        
+
 
         
         if(gr.tagP.count(sym) > 0 || isB) {
@@ -292,13 +306,6 @@ public:
 
             if(item->kids.size() > 0) {
 
-                if(item->buckets.size() < item->kids[0]->buckets.size()) {
-                    unsigned int ksym = item->kids[0]->sym;
-                    if(gr.tagP.count(ksym) > 0 && gr.wrapping.count(ksym) > 0) {
-                        printf("WRAP\t%s\n",gr.wrapping[ksym].c_str());
-                    }
-                }
-                
                 for(size_t i=0;i<item->kids.size();++i) {
                     ret << " " << getParse(item->kids[i],t);
                 }

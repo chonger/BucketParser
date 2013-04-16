@@ -571,7 +571,11 @@ public:
 
     //SYMBOL AND LEFTMOST CHILD
     string getAKey(unsigned int s) {
-        return syms[baseSym[s]] + " " + syms[baseSym[gKids[s][0]]];
+        ParseTree* t = getTree(s);
+        string os = toString(t);
+        delete t;
+        return os;
+        //        return syms[baseSym[s]];// + " " + syms[baseSym[gKids[s][0]]];
     }
     
     virtual bool allow(string& s) {
@@ -783,14 +787,14 @@ public:
         for(I2Dmap::iterator iter = tsgP.begin();iter != tsgP.end();++iter) {
             unsigned int rSym = iter->first;
             ParseTree* tree = getTree(rSym);
-            prior.insert(make_pair(rSym,pow(.5,tree->size())));
+            prior.insert(make_pair(rSym,pow(.5,double(tree->size()))));
             //prior.insert(make_pair(rSym,.00000001));
             delete tree;
         }
         for(I2Dmap::iterator iter = tagP.begin();iter != tagP.end();++iter) {
             unsigned int rSym = iter->first;
             ParseTree* tree = getTree(rSym);
-            prior.insert(make_pair(rSym,pow(.5,tree->size())));
+            prior.insert(make_pair(rSym,pow(.5,double(tree->size()))));
             //prior.insert(make_pair(rSym,.00000001));
             delete tree;
         }

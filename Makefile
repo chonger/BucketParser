@@ -1,8 +1,8 @@
-MOD=10
+MOD=
 
 PTB=/home/chonger/data/PTB/
 TSGGRAM=$(PTB)trainPTSG.txt$(MOD)
-TAGGRAM=$(PTB)tagGrammar.txt$(MOD)
+TAGGRAM=$(PTB)tagGrammarSYM.txt$(MOD)X
 TOPARSE=$(PTB)23.yld$(MOD)
 GOLD=$(PTB)23.txt.unk$(MOD)
 TSGOUT=$(PTB)tsgout.txt$(MOD)
@@ -24,7 +24,7 @@ pcfg:
 	bin/pcfgtest $(PCFG) $(TOPARSE) $(GOLDB)
 
 tsgparse:
-	bin/parse $(TSGGRAM) 0 $(TOPARSE) $(TSGOUT) $(PCFG)
+	bin/parse $(TSGGRAM) 0 $(TOPARSE) $(TSGOUT) 
 
 vg:
 	valgrind --leak-check=full bin/parse $(TSGGRAM) 0 $(TOPARSE) $(TSGOUT) $(PCFG)
@@ -42,10 +42,10 @@ maketag:
 	bin/maketag $(TSGGRAM) $(TAGGRAM)
 
 em:
-	bin/em $(TAGGRAM) 1 10 $(TRAIN) $(TAGGRAM)E
+	bin/em $(TAGGRAM) 2 10 $(TRAIN) $(TAGGRAM)E
 
 em2:
-	bin/em $(TAGGRAM)T 1 100 $(TRAIN) $(TAGGRAM)E2
+	bin/em $(TAGGRAM)T 2 100 $(TRAIN) $(TAGGRAM)E2
 
 trim2:
 	bin/trim $(TAGGRAM)E2 $(TAGGRAM)T2
@@ -59,4 +59,4 @@ trainme:
 testme:
 	bin/testme $(TESTCTF) 
 
-batch: maketag em trim em2 tagparse
+batch: maketag em trim em2 
