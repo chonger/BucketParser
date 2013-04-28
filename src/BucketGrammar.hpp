@@ -25,6 +25,8 @@ typedef google::dense_hash_map<string,unsigned int,hash<string>,equal_to<string>
 typedef google::dense_hash_map<string,set<unsigned int>,hash<string>,equal_to<string> > S2Setmap;
 typedef google::dense_hash_map<vector<unsigned int>,unsigned int,hash<vector <unsigned int> >, equal_to<vector <unsigned int> > > V2Imap;
 
+
+
 struct TreeNode {
 
     TreeNode(unsigned int sym_,vector<TreeNode*> k_) : sym(sym_), k(k_) {}
@@ -61,6 +63,7 @@ struct TreeNode {
 };
 
 
+//makes the statement that a symbol (sym) has a given prob of appearing over span i,j
 struct EvalItem {
 
     std::string sym;
@@ -78,128 +81,45 @@ struct EvalItem {
     
 };
 
-typedef google::dense_hash_map<pair<unsigned int, unsigned int>,vector<EvalItem*>,hash<pair<unsigned int , unsigned int> >,equal_to<pair<unsigned int, unsigned int> > > EvalMap;
+typedef google::dense_hash_map<pair<unsigned int, unsigned int>,vector<EvalItem*>,hash<pair<unsigned int , unsigned int> >,
+                               equal_to<pair<unsigned int, unsigned int> > > EvalMap;
 
 struct ParseTree {
-
+    /**
     ParseTree(string s, S2Imap sym2base, unsigned int glueS) {
         stringstream ss(s);
         root = readNode(ss,sym2base,glueS);
         terms = getTerms(s);
     }
-    
-    ParseTree(TreeNode* root_, vector<string> terms_) : root(root_), terms(terms_) {
-        
-    }
+    */
 
-    vector<string> getTerms(string& s) {
-        vector<string> terms;
-        stringstream ss(s);
-        string w;
-        while(ss.good()) {
-            ss >> w;
-            if(w[0] != '(') {
-                //printf("got %s\n",w.c_str());
-                string tok = w.substr(0,w.find_first_of(')'));
-                if(tok != "<>") {
-                    //printf("--- %s\n",tok.c_str());
-                    terms.push_back(tok);
-                }
-                
-            }
-        }
-        return terms;
-    }
+    ParseTree(string x) : root(NULL), terms(), hashv(x) {
 
-    string checkfoot(TreeNode* node, unsigned int ns) {
-
-        if(node->sym >= ns && node->sym < ns*2) //its the foot
-            return "F";
-        
-        vector<TreeNode*>& k = node->k;
-        if(k.size() == 1)
-            return checkfoot(k[0],ns);
-
-        if(k.size() == 0)
-            return "N";
-        
-        assert(k.size() == 2);
-
-        string l = checkfoot(k[0],ns);
-        string r = checkfoot(k[1],ns);
-
-        if(r == "W" || l == "W")
-            return "W";
-        if(l == "F")
-            return "L";
-        if(r == "F")
-            return "R";
-        if(r == "L" || l == "R")
-            return "W";
-        if(l == "L")
-            return "L";
-        if(r == "R")
-            return "R";
-        return "N";
-        
     }
     
-    TreeNode* readNode(stringstream& ss, S2Imap& sym2base, unsigned int glueS) {
-        char c;
-        ss >> c;
-        assert(c == '(');
+    ParseTree(TreeNode* root_, vector<string> terms_) : root(root_), terms(terms_), hashv("") {
 
-        string sym = "";
-        ss >> sym;
-        unsigned int symI = sym2base[sym];
-        
-        vector<TreeNode*> kids;
-        
-        while(true) {
-            c = ss.peek();
-            if(c == ' ') { //it's a space
-                ss.ignore(1); //ignore that space
-            } else if(c == '(') { //nonterminal
-                //get child node index
-                TreeNode* kid = readNode(ss,sym2base,glueS);
-                kids.push_back(kid);                
-            } else if (c == ')') {
-                ss.ignore(1); //burn closing paren
-                //      printf("Finished Rule with sym %s and %lu kids\n",sym.c_str(),kids.size()-1);
-
-                
-                while(kids.size() > 2) { //try to add glue rule
-
-                    //  printf("K = %lu\n",kids.size());
-                    TreeNode* r = kids.back();
-                    kids.pop_back();
-                    TreeNode* l = kids.back();
-                    kids.pop_back();
-                    unsigned int glueI = glueS;
-                    vector<TreeNode*> nKids;
-                    nKids.push_back(l);
-                    nKids.push_back(r);
-                    
-                    kids.push_back(new TreeNode(glueI,nKids));
-                }
-
-                return new TreeNode(symI,kids);
-                
-            } else { //terminal
-                string term = "";
-                while(ss.peek() != ')') {
-                    term += ss.get();
-                }
-                //                printf("got terminal %s\n",term.c_str());
-                ss.ignore(1); //burn closing paren
-                vector<TreeNode*> noKids;
-                return new TreeNode(symI,noKids);
-            }
-        }
-        return NULL;
     }
 
-
+    void setHashString(string* syms) {
+        vector<string>::iterator titer = terms.begin();
+        hashv = getHString(root, titer, syms);
+        //printf("TREE %s\n",hashv.c_str());
+    }
+    
+    string getHString(TreeNode* n, vector<string>::iterator& titer, string* syms) {
+        string ret = "(" + syms[n->sym];
+        if(n->k.size() == 0) {
+            ret += " " + *titer + ")";
+            titer++;
+            return ret;
+        }
+        for(size_t i=0;i<n->k.size();++i) {
+            ret += " " + getHString(n->k[i],titer,syms);
+        }
+        ret += ")";
+        return ret;
+    }
     
     ~ParseTree() {
         delete root;
@@ -231,8 +151,36 @@ struct ParseTree {
     
     bool isPCFG() {
         return depth() == 1;
+    }    
+    
+    vector<pair<TreeNode*,int> > nodes() {
+        int i = 0;
+
+        vector<pair<TreeNode*,int> > r;
+
+        recNodes(root,i,r);
+        
+        return r;
     }
 
+    void recNodes(TreeNode* n, int& tInd, vector<pair<TreeNode*,int> >& ret) {
+
+        if(n->k.size() == 0) {//terminal
+            pair<TreeNode*,int> me =  make_pair(n,tInd++);
+            ret.push_back(me);
+        } else {
+            for(size_t i=0;i<n->k.size();++i) {
+                TreeNode* kn = n->k[i];
+                recNodes(kn,tInd, ret);
+            }
+            pair<TreeNode*,int> me =  make_pair(n,-1);
+            ret.push_back(me);
+        }
+    }
+    
+    //gets the gold standard EvalItems from a tree (when called on the root
+    //returns the eval items and the number of terminals covered
+    //TODO : syms is just the grammar symbols - could either change EvalItem to contain ints instead of strings, or make this a BucketGrammar member.
     std::pair<std::vector<EvalItem>,unsigned int> getEItems(TreeNode* node, string* syms) {
         
         std::vector<EvalItem> ret;
@@ -257,14 +205,29 @@ struct ParseTree {
             EvalItem e(syms[node->sym],tot-1,0,1.0);
             ret.push_back(e);
             return make_pair(ret,tot);
-        }
-        
+        }     
     }
     
     TreeNode* root;
     vector<string> terms;
+    string hashv;
 };
 
+
+struct ParseTreeEq {
+  bool operator()(ParseTree* const& a, ParseTree* const& b ) const
+  {
+      a->hashv == b->hashv;
+  }
+};
+
+
+struct ParseTreeHash{
+    size_t operator()(ParseTree* const& k) const{
+        hash<string> hf;
+        return hf(k->hashv);
+    }
+};
 
 class BucketGrammar {
 public:
@@ -277,121 +240,6 @@ public:
         loadGrammar(ifs);
     }
 
-
-    vector<TreeNode*> below(TreeNode* n, unsigned int s) {
-        vector<TreeNode*> ret;
-        if(baseSym[s] == baseSym[n->sym]) {
-            ret.push_back(n);
-        }
-        for(vector<TreeNode*>::iterator iter = n->k.begin();iter != n->k.end();++iter) {
-            vector<TreeNode*> kBelow = below(*iter,s);
-            for(vector<TreeNode*>::iterator jter = kBelow.begin();jter != kBelow.end();++jter) {
-                ret.push_back(*jter);
-            }
-        }
-        return ret;
-    }
-
-    pair<vector<ParseTree*>, vector<ParseTree*> > getTAGs(ParseTree* tree) {
-        vector<ParseTree*> retTAG,retTSG;
-        vector<TreeNode*> ns = tree->root->nodes();
-        for(size_t i=0;i<ns.size();++i) {
-            TreeNode* n = ns[i];
-            if(n->sym != nSym*2) {
-                vector<TreeNode*> belows = below(n,n->sym);
-                for(size_t j=1;j<belows.size();++j) {
-                    vector<string> newtermsTAG,newtermsTSG;
-                    vector<string> oldtermsTAG = tree->terms;
-                    vector<string> oldtermsTSG = tree->terms;
-                    reverse(oldtermsTAG.begin(),oldtermsTAG.end());
-                    reverse(oldtermsTSG.begin(),oldtermsTSG.end());
-                    TreeNode* newTAG = tagcopy(tree->root,n,belows[j],newtermsTAG,oldtermsTAG,false);
-                    TreeNode* newTSG = tsgcopy(tree->root,n,belows[j],newtermsTSG,oldtermsTSG,true);
-
-                    assert(newTAG != NULL);
-                    assert(newTSG != NULL);
-
-                    retTAG.push_back(new ParseTree(newTAG,newtermsTAG));
-                    retTSG.push_back(new ParseTree(newTSG,newtermsTSG));
-                }
-            }
-        }
-        return make_pair(retTSG,retTAG);
-    }
-
-    TreeNode* tsgcopy(TreeNode* n, TreeNode* head, TreeNode* foot, vector<string>& newterms,vector<string>& oldterms,bool on) {
-        if(on) {
-            if(n == head) {
-                return tsgcopy(n,head,foot,newterms,oldterms,false); 
-            } else {
-                if(n->k.size() == 0) {
-                    newterms.push_back(oldterms.back());
-                    oldterms.pop_back();
-                }
-                vector<TreeNode*> k;
-                for(size_t i=0;i<n->k.size();++i) {
-                    k.push_back(tsgcopy(n->k[i],head,foot,newterms,oldterms,true));
-                }
-                return new TreeNode(n->sym,k);
-            }
-        } else {
-            if(n == foot) { //turn copying on
-                return tsgcopy(n,head,foot,newterms,oldterms,true); 
-            } else {
-                if(n->k.size() == 0) { //burn the terminal
-                    oldterms.pop_back();
-                }
-
-                TreeNode* rt = NULL;
-                
-                for(size_t i=0;i<n->k.size();++i) {
-                    TreeNode* tn = tsgcopy(n->k[i],head,foot,newterms,oldterms,false);
-                    if(tn != NULL)
-                        rt = tn;
-                }
-                return rt;
-            }
-        }
-    }
-    
-    TreeNode* tagcopy(TreeNode* n, TreeNode* head, TreeNode* foot, vector<string>& newterms,vector<string>& oldterms,bool on) {
-        if(on) {
-            if(n == foot) {
-                newterms.push_back("<>");
-                tagcopy(n,head,foot,newterms,oldterms,false); //burn through dominated terms
-                return new TreeNode(baseSym[foot->sym] + nSym,vector<TreeNode*>());
-            } else {
-                if(n->k.size() == 0) {
-                    newterms.push_back(oldterms.back());
-                    oldterms.pop_back();
-                }
-                vector<TreeNode*> k;
-                for(size_t i=0;i<n->k.size();++i) {
-                    k.push_back(tagcopy(n->k[i],head,foot,newterms,oldterms,true));
-                }
-                return new TreeNode(n->sym,k);
-            }
-        } else {
-            if(n == head) { //turn copying on
-                return tagcopy(n,head,foot,newterms,oldterms,true); 
-            } else {
-                if(n->k.size() == 0) { //burn the terminal
-                    oldterms.pop_back();
-                }
-
-                TreeNode* rt = NULL;
-                for(size_t i=0;i<n->k.size();++i) {
-                    TreeNode* tn = tagcopy(n->k[i],head,foot,newterms,oldterms,false);
-                    if(tn != NULL)
-                        rt = tn;
-                }
-                return rt;
-            }
-        }
-    }
-    
-
-    
     void loadGrammar(std::ifstream&ifs) {
 
         //HASMAP SETUP
@@ -412,15 +260,16 @@ public:
 
         preterms.set_empty_key("EMPTYKEY");
         preterms.set_deleted_key("DELETEDKEY");
+
+        sym2base.set_empty_key("EMPTYKEY");
+        sym2base.set_deleted_key("DELETEDKEY");
         
         //these hashmaps are only used in the transform (loading only)
+
+        //this one maps terminals to the base symbols
         S2Setmap pt2base;
         pt2base.set_empty_key("EMPTYKEY");
         pt2base.set_deleted_key("DELETEDKEY");
-
-        S2Imap sym2base;
-        sym2base.set_empty_key("EMPTYKEY");
-        sym2base.set_deleted_key("DELETEDKEY");
 
         V2Imap goodman;
         vector<unsigned int> eKey,dKey;
@@ -455,6 +304,9 @@ public:
             //adjoinP[i] = prob;
         }
         syms[nSym*2] = "GLUE";
+
+        glueS = nSym*2;
+
         
         goodmanIndex = nSym*2+1; //skip both base and foot nodes, and glue sym
         for(unsigned int i=0;i<goodmanIndex;++i) { //map the base/foot/glue nodes to themselves in the basemap
@@ -499,28 +351,21 @@ public:
         //printf("%u TAG rules\n",nTAG);
         //nTAG = 0;
 
-        //DIAGNOSTIC
-        wrapping.set_empty_key(-1);
         
         for(int i=0;i<nTAG;++i) {
             if(i>0 && i % 100000 == 0)
                 printf("processed %d so far\n",i);
             getline(ifs,line);
             if(allow(line)) {
-
-
-
-                
                 unsigned int ruleRoot = addRule(line,sym2base,pt2base,goodman);
 
+                /**
                 //DIAGNOSTIC!!!
                 ParseTree pt(line,sym2base,nSym*2);
-                string ty = pt.checkfoot(pt.root,nSym);
-                
-                
+                string ty = pt.checkfoot(pt.root,nSym);                
                 wrapping.insert(make_pair(ruleRoot,ty + "\t" + line));
-                
                 //DIAGNOSTIC!!!
+                */
                 
                 getline(ifs,line);
                 double prob = atof(line.c_str());
@@ -537,7 +382,6 @@ public:
 
         adjoinP = new double[nAC];
 
-
         aKeys.set_empty_key("");
         
         for(int i=0;i<nAC;++i) {
@@ -547,7 +391,6 @@ public:
             double prob = atof(line.c_str());
             adjoinP[i] = prob;
         }
-        
         
         getG();
         for(unsigned int i =nSym*2+1;i<goodmanIndex;++i) {
@@ -560,13 +403,7 @@ public:
         }        
         
         ifs.close();
-        /**
-        printf("PTS\n");
-        for(set<unsigned int>::iterator iter = ptsyms.begin(); iter != ptsyms.end(); ++iter) {
-            printf("%s\n",syms[*iter].c_str());
-        }
-        */
-        
+                
     }
 
     //SYMBOL AND LEFTMOST CHILD
@@ -592,7 +429,74 @@ public:
         
     }
 
-    unsigned int getRule(stringstream& ss, S2Imap& sym2base, S2Setmap& pt2base, V2Imap& goodman) {
+        //from a flat string representation of a ParseTree, get a vector of terminals
+    //TODO : can be made a static utility func
+    vector<string> getTerms(string& s) {
+        vector<string> terms;
+        stringstream ss(s);
+        string w;
+        while(ss.good()) {
+            ss >> w;
+            if(w[0] != '(') {
+                string tok = w.substr(0,w.find_first_of(')'));
+                if(tok != "<>") {
+                    terms.push_back(tok);
+                }
+            }
+        }
+        return terms;
+    }
+    
+    TreeNode* readNode(stringstream& ss) {
+        char c;
+        ss >> c;
+        assert(c == '(');
+
+        string sym = "";
+        ss >> sym;
+        unsigned int symI = sym2base[sym];
+        
+        vector<TreeNode*> kids;
+        
+        while(true) {
+            c = ss.peek();
+            if(c == ' ') { //it's a space
+                ss.ignore(1); //ignore that space
+            } else if(c == '(') { //nonterminal
+                //get child node index
+                TreeNode* kid = readNode(ss);
+                kids.push_back(kid);                
+            } else if (c == ')') {
+                ss.ignore(1); //burn closing paren
+                while(kids.size() > 2) { //try to add glue rule
+                    TreeNode* r = kids.back();
+                    kids.pop_back();
+                    TreeNode* l = kids.back();
+                    kids.pop_back();
+                    unsigned int glueI = glueS;
+                    vector<TreeNode*> nKids;
+                    nKids.push_back(l);
+                    nKids.push_back(r);
+                    
+                    kids.push_back(new TreeNode(glueI,nKids));
+                }
+
+                return new TreeNode(symI,kids);
+                
+            } else { //terminal
+                string term = "";
+                while(ss.peek() != ')') {
+                    term += ss.get();
+                }
+                ss.ignore(1); //burn closing paren
+                vector<TreeNode*> noKids;
+                return new TreeNode(symI,noKids);
+            }
+        }
+        return NULL;
+    }
+
+    unsigned int getRule(stringstream& ss, S2Setmap& pt2base, V2Imap& goodman) {
         char c;
         ss >> c;
         assert(c == '(');
@@ -611,7 +515,7 @@ public:
                 ss.ignore(1); //ignore that space
             } else if(c == '(') { //nonterminal
                 //get child node index
-                unsigned int index = getRule(ss,sym2base,pt2base,goodman);
+                unsigned int index = getRule(ss,pt2base,goodman);
                 kSyms.push_back(index);                
             } else if (c == ')') {
                 ss.ignore(1); //burn closing paren
@@ -743,11 +647,12 @@ public:
         
         return 1;
     }
+
     
     unsigned int addRule(string& s, S2Imap& sym2base, S2Setmap& pt2base, V2Imap& goodman) {
         stringstream ss;
         ss << s;
-        return getRule(ss,sym2base,pt2base,goodman);
+        return getRule(ss,pt2base,goodman);
     }
 
     I2Dmap tsgP;
@@ -758,12 +663,14 @@ public:
     Umap umap;
     Bmap bmap;
     S2Imap aKeys; //adjunction keys
+    S2Imap sym2base;
     
     vector<bool> canL;
     vector<bool> canR;
     Lmap leftlook;
     
     unsigned int nSym;
+    unsigned int glueS;
     int nTSG;
     int nTAG;
     int nAC;
@@ -776,12 +683,6 @@ public:
     vector<string> tKids;
     set<unsigned int> ptsyms;
 
-    //DIAGNOSTIC!!!
-
-    google::dense_hash_map<unsigned int,string> wrapping;
-
-    //DIAGNOSTIC!!!
-    
     void makePrior() {
         getG();
         for(I2Dmap::iterator iter = tsgP.begin();iter != tsgP.end();++iter) {
@@ -898,8 +799,7 @@ public:
         }
     }
 
-    
-    
+    //sort rules by symbol, then by descending probability
     struct Rulesort {
         
         Rulesort(BucketGrammar* gr_) : gr(gr_) {}
@@ -915,13 +815,11 @@ public:
         
         BucketGrammar* gr;
     };
-    
+
+    //sort adjunction keys by descending probability
     struct Psort {
         bool operator()(pair<string,double> const &a, pair<string,double> const &b) {
-            //if(a.first != b.first)
-            //  return a.first < b.first;
-            //else
-                return a.second > b.second;
+            return a.second > b.second;
         }
     };
 
@@ -999,79 +897,6 @@ public:
         sort(aaa.begin(),aaa.end(),Psort());
         for(size_t i=0;i<aaa.size();++i) {
             ofs << aaa[i].first << "\n" << aaa[i].second << "\n";
-        }
-        
-    }
-    
-    void extractTAG(std::ofstream& ofs) {
-        
-        ofs << int(nSym) << "\n";
-        for(size_t i=0;i<nSym;++i) {
-            ofs << syms[i] << "\n";
-        }
-
-        getG();
-        set<string> tagS,tsgS;        
-
-        vector<pair<unsigned int,double> > srt;
-        for(I2Dmap::iterator iter = tsgP.begin();iter != tsgP.end();++iter) {
-            srt.push_back(*iter);
-        }
-        sort(srt.begin(),srt.end(),Rulesort(this));        
-        for(vector<pair<unsigned int,double> >::iterator iter= srt.begin();iter!=srt.end();++iter) {
-            unsigned int rSym = iter->first;
-            //double prob = iter->second;
-            ParseTree* tree = getTree(rSym);
-            tsgS.insert(toString(tree));
-            //ofs << toString(tree) << "\n" << prob << "\n";
-
-            pair<vector<ParseTree*>,vector<ParseTree*> >  res = getTAGs(tree);
-
-            //printf("Got %lu rules from %s\n",res.first.size(),toString(tree).c_str());
-
-            vector<ParseTree*>& tsgs = res.first;
-            vector<ParseTree*>& tags = res.second;
-            
-            for(size_t i=0;i<tags.size();++i) {
-                //printf("TAG! - %s\n",toString(tags[i]).c_str());
-                tagS.insert(toString(tags[i]));
-                delete tags[i];
-            }
-            for(size_t i=0;i<tsgs.size();++i) {
-                if(tsgs[i]->depth() > 0) {
-                    //printf("TSG! %lu - %s\n",tsgs[i]->depth(),toString(tsgs[i]).c_str());
-                    tsgS.insert(toString(tsgs[i]));
-                }
-                delete tsgs[i];
-            }
-            
-            delete tree;
-        }
-
-        printf("%lu TSG -> %lu TSG and %lu TAG\n",srt.size(),tsgS.size(),tagS.size());
-        
-        ofs << int(tsgS.size()) << "\n";
-        for(set<string>::iterator iter = tsgS.begin();iter != tsgS.end();++iter) {
-            ofs << *iter << "\n.1\n";
-        }        
-        
-        ofs << int(tagS.size()) << "\n";
-        for(set<string>::iterator iter = tagS.begin();iter != tagS.end();++iter) {
-            ofs << *iter << "\n.1\n";
-        }
-
-        getG();
-        set<string> kset;
-        for(unsigned int i =nSym*2+1;i<goodmanIndex;++i) {
-            unsigned int bS = baseSym[i];
-            if(ptsyms.count(bS) == 0 && bS != nSym*2 && tagP.count(i) == 0) { //get rid of preterminals,GLUE symbol,and tagroots
-                string k = getAKey(i);
-                kset.insert(k);
-            }
-        }                
-        ofs << int(kset.size()) << "\n";
-        for(set<string>::iterator i = kset.begin(); i != kset.end();++i) {
-            ofs << *i << "\n.5\n";
         }
         
     }
@@ -1207,8 +1032,12 @@ private:
     
 };
 
+
+//Accepts a set of terminals and excludes any rule with a terminal not in this set
 class LimitedBucketGrammar : public BucketGrammar {
 public:
+
+    //get the words from a file
     LimitedBucketGrammar(std::ifstream& ifs, const char* allWords) : BucketGrammar() {
         std::ifstream wz(allWords);
         if(!wz.is_open()) {
@@ -1221,13 +1050,12 @@ public:
         string w;
         while(wz.good()) {
             wz >> w;
-            //printf("!%s!\n",w.c_str());
             dict.insert(w);
         }
-
         loadGrammar(ifs);
     }
 
+    //get the words from a space delimited string
     LimitedBucketGrammar(std::ifstream& ifs, string s) : BucketGrammar() {
         
         stringstream wz(s);
@@ -1237,7 +1065,6 @@ public:
         string w;
         while(wz.good()) {
             wz >> w;
-            //printf("!%s!\n",w.c_str());
             dict.insert(w);
         }
         
@@ -1247,18 +1074,15 @@ public:
     bool allow(string& s) {
         bool a = true;
         vector<string> terms;
-
-        //        printf("EXAMINE %s\n",s.c_str());
-
         stringstream ss(s);
         string w;
         while(ss.good()) {
             ss >> w;
             if(w[0] != '(') {
-                //printf("got %s\n",w.c_str());
+
                 string tok = w.substr(0,w.find_first_of(')'));
                 if(tok != "<>") {
-                    //          printf("--- %s\n",tok.c_str());
+
                     terms.push_back(tok);
                 }
                 

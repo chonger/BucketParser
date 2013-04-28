@@ -264,7 +264,7 @@ public:
         bool isB = symS.find('@') == 0 || symS.find('+') == 0 || symS == "GLUE";
         //bool isB = false;
 
-        
+        /**
         if(item->kids.size() > 0 && item->buckets.size() < item->kids[0]->buckets.size()) {
 
             if(item->buckets.size() > 0)
@@ -275,7 +275,7 @@ public:
                 printf("WRAP\t%s\n",gr.wrapping[ksym].c_str());
             }
         }
-        
+        */
         
         if(sym == bSym) {
             assert(item->kids.size() == 1);

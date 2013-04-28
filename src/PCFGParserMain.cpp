@@ -39,7 +39,10 @@ int main(int argc, const char* argv[]) {
     }
 
     PCFGParser parser(pifs);
-
+    pifs.close();
+    pifs.open(grammarFilename);
+    BucketGrammar bg(pifs);
+    
     std::ifstream ifs(toparseFilename);
     if(!ifs.is_open()) {
         printf("Invalid file at %s\n",toparseFilename);
@@ -92,8 +95,9 @@ int main(int argc, const char* argv[]) {
                 ss >> t;
                 terms.push_back(t);
             }
-            
-            ParseTree goldTree(goldS,parser.sym2base,parser.nSym);
+
+            stringstream gss;
+            ParseTree goldTree(bg.readNode(gss),terms);
             
             std::vector<EvalItem> gold = goldTree.getEItems(goldTree.root,parser.syms).first;
             

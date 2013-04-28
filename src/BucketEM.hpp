@@ -14,21 +14,21 @@ using namespace std;
 struct EMItem {
 
     EMItem(unsigned int sym_, vector<unsigned int> buckets_) :
-        sym(sym_), buckets(buckets_), prob(0.0)
+        sym(sym_), buckets(buckets_), prob(0.0), oprob(0.0), term(NULL)
     {
         initH();
     }
     
     EMItem(unsigned int sym_, vector<unsigned int> buckets_,
-           double prob_, vector<vector<EMItem*> >kids_) :
-        sym(sym_), buckets(buckets_), prob(prob_), kids(kids_)
+           double prob_, vector<pair<vector<EMItem*> ,double> > kids_) :
+        sym(sym_), buckets(buckets_), prob(prob_), kids(kids_), term(NULL)
     {
         initH();
     }
     
     EMItem(unsigned int sym_,
            double prob_) :
-        sym(sym_), buckets(), prob(prob_)
+        sym(sym_), buckets(), prob(prob_),oprob(0.0), term(NULL)
     {
         initH();
     }
@@ -41,14 +41,16 @@ struct EMItem {
     
     void add(double p,vector<EMItem*> k) {
         prob += p;        
-        kids.push_back(k);
+        kids.push_back(make_pair(k,p));
     }
     
     const unsigned int sym;
-    const vector<unsigned int> buckets;
+    vector<unsigned int> buckets;
     double prob;
-    vector<vector<EMItem*> > kids;
+    double oprob;
+    vector<pair<vector<EMItem*>, double > > kids;
     size_t hashv;
+    string* term;
     
 private:
     EMItem(const EMItem &o) : sym(0), prob(0), hashv(0) {printf("!?!?!?!?!?!?\n");}
@@ -106,13 +108,6 @@ public:
 
         gr.makePrior();
         
-        sym2base.set_empty_key("EMPTYKEY");
-        sym2base.set_deleted_key("DELETEDKEY");
-
-        for(int i=0;i<gr.nSym;++i) {
-            sym2base.insert(make_pair(gr.syms[i],i));
-        }
-
         std::ifstream ifs(trainF);
         if(!ifs.is_open()) {
             printf("Invalid file at %s\n",trainF);
@@ -272,8 +267,8 @@ public:
             return;
         seen.insert(it);
 
-        for(vector<vector<EMItem*> >::iterator iter = it->kids.begin();iter != it->kids.end();++iter) {
-            for(vector<EMItem*>::iterator jter = iter->begin();jter != iter->end();++jter) {
+        for(vector<pair<vector<EMItem*>,double > >::iterator iter = it->kids.begin();iter != it->kids.end();++iter) {
+            for(vector<EMItem*>::iterator jter = iter->first.begin();jter != iter->first.end();++jter) {
                 edges[*jter] += 1;
                 recO1(*jter,seen,edges);
             }
@@ -286,8 +281,8 @@ public:
         unsigned int count = edges[it];
         if(count <= 1) {
             ordered.push_back(it);
-            for(vector<vector<EMItem*> >::iterator iter = it->kids.begin();iter != it->kids.end();++iter) {
-                for(vector<EMItem*>::iterator jter = iter->begin();jter != iter->end();++jter) {
+            for(vector<pair<vector<EMItem*>,double > >::iterator iter = it->kids.begin();iter != it->kids.end();++iter) {
+                for(vector<EMItem*>::iterator jter = iter->first.begin();jter != iter->first.end();++jter) {
                     recO2(*jter,ordered,edges);
                 }
             }
@@ -351,7 +346,7 @@ public:
                 
                 vector<vector< unsigned int> > offs;
                 for(size_t j=0;j<it->kids.size();++j) {
-                    vector<EMItem*>& cur = it->kids[j];
+                    vector<EMItem*>& cur = it->kids[j].first;
                     vector<unsigned int> newV;
                     for(size_t k=0;k<cur.size();++k) {
                         newV.push_back(inds[cur[k]]);
@@ -713,15 +708,13 @@ public:
     }    
     
     ParseTree* readTree(string& s) {
-        //printf("READING TREE %s\n",s.c_str());
-
-        return new ParseTree(s,sym2base,gr.nSym*2);
+        stringstream ss(s);
+        TreeNode* root = gr.readNode(ss);
+        vector<string> terms = gr.getTerms(s);
+        return new ParseTree(root,terms);
     }
-    
-            
 
     vector<EMItem*> cleanme;
-    S2Imap sym2base;
     BucketGrammar& gr;
     vector<ParseTree*> trainTreez;
     unsigned int nBuckets;

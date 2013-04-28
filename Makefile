@@ -60,3 +60,12 @@ testme:
 	bin/testme $(TESTCTF) 
 
 batch: maketag em trim em2 
+
+
+DATA=/home/chonger/data/
+
+vb:
+	bin/vb $(DATA)PTB/pcfg10.txt $(DATA)PTB/train.txt.unk 5 $(DATA)PTB/vbout
+
+vb2:
+	bin/vb $(DATA)toyG $(DATA)toyT2 5 $(DATA)toyO
