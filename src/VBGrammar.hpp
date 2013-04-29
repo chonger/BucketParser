@@ -20,6 +20,7 @@ typedef google::dense_hash_map<pair<string, unsigned int>,unsigned int,hash<pair
 
 typedef google::dense_hash_map<ParseTree*,unsigned int,ParseTreeHash,ParseTreeEq > T2Imap;
 typedef google::dense_hash_map<ParseTree*,double,ParseTreeHash,ParseTreeEq > T2Dmap;
+typedef google::dense_hash_set<ParseTree*,ParseTreeHash,ParseTreeEq > Tset;
 
 class VBGrammar {
 public:
@@ -280,6 +281,7 @@ public:
                 prior *= pcfgNT[key] * (1-cutProb[n->sym]);
             }
         }
+        return prior;
     }
     
     vector<string> getTerms(string& s) {
@@ -411,6 +413,63 @@ public:
         
     };
     
+    void writeTruncated(std::ofstream& ofs) {
+        
+        ofs << int(nSym) << "\n";
+        for(size_t i=0;i<nSym;++i) {
+            ofs << syms[i] << "\n";
+        }
+
+        double totals[nSym];
+        for(size_t i=0;i<nSym;++i) {
+            totals[i] = 0;
+        }
+        
+        vector<pair<ParseTree*,double> > srt;
+        for(T2Imap::iterator iter = ruleTreez.begin();iter != ruleTreez.end();++iter) {
+            ParseTree* tree= iter->first;            
+            unsigned int baseS = baseSym[tree->root->sym];
+            double prob = tsgP[iter->second] + alpha[baseS]*getPrior(tree);
+            totals[baseS] += prob;
+            srt.push_back(make_pair(tree,prob));
+        }
+
+        Tset pcfgRules;
+        pcfgRules.set_empty_key(eTree);
+        for(size_t i=0;i<trainTreez.size();++i) {
+            vector<ParseTree*> rulez = trainTreez[i]->rules();
+            for(size_t j=0;j<rulez.size();++j) {
+                rulez[j]->setHashString(syms);
+                pcfgRules.insert(rulez[j]);
+            }
+        }
+
+        for(Tset::iterator iter = pcfgRules.begin();iter != pcfgRules.end();++iter){
+            ParseTree* tree = *iter;
+            T2Imap::iterator findo = ruleTreez.find(tree);
+            if(findo == ruleTreez.end()) {
+                printf("adding pcfg rule %s\n",tree->hashv.c_str());
+                unsigned int baseS = baseSym[tree->root->sym];
+                double prob = alpha[baseS]*getPrior(tree);
+                totals[baseS] += prob;
+                srt.push_back(make_pair(tree,prob));
+            }
+        }
+        
+        ofs << int(srt.size()) << "\n";
+        sort(srt.begin(),srt.end(),Rulesort2());        
+        for(vector<pair<ParseTree*,double> >::iterator iter= srt.begin();iter!=srt.end();++iter) {
+            ParseTree* t = iter->first;
+            unsigned int baseS = baseSym[t->root->sym];
+            double prob = iter->second / totals[baseS];
+            ofs << t->hashv << "\n" << prob << "\n";
+        }
+
+        for(Tset::iterator iter = pcfgRules.begin();iter != pcfgRules.end();++iter) {
+            delete *iter;
+        }
+    }
+
     void write(std::ofstream& ofs) {
         
         ofs << int(nSym) << "\n";

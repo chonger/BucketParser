@@ -52,7 +52,8 @@ public:
         double pLeft[gr.nSym];
         for(size_t i=0;i<gr.nSym;++i)
             pLeft[i] = 1.0;
-        
+
+        unsigned int rem = 0;
         //eliminate rules that have a probability less than X (~10^-3 ?)
         for(T2Imap::iterator iter = gr.ruleTreez.begin();iter != gr.ruleTreez.end();++iter) {
             unsigned int ind = iter->second;
@@ -62,10 +63,13 @@ public:
                 treemap[iter->first] = p;
                 pLeft[b] -= p;
             } else {
+                rem += 1;
                 delete iter->first;
                 //printf("DROP : %s\n",iter->first->hashv.c_str());
             }
         }
+
+        printf("Dropped %u rules\n",rem);
 
         //DUMMY VARS FOR IO FUNCTION
         I2Dmap tsgE; //the expected counts of each tsg rule in the grammar

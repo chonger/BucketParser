@@ -53,16 +53,17 @@ int main(int argc, const char* argv[]) {
     
     BucketVB vb(g);
     
-    vb.emIter(true);
+    
     vb.emIter(true);
     vb.reformGrammar();
-
+    vb.emIter(true);
+    
     /**
     for(unsigned int i=0;i<100 && cont;++i) {
             printf("%u - %e\n",i+1,vb.emIter(true));
     }
     */
-    
+    /**
     for(unsigned int i=0;i<2 && cont;++i) {
         for(unsigned int j=0;j<2;++j) {
             q = false;
@@ -75,13 +76,13 @@ int main(int argc, const char* argv[]) {
         q = false;
         printf("%e\n",vb.emIter(true));
     }
-    
+    */
     std::ofstream ofs(outputFilename);
     if(!ofs.is_open()) {
         printf("Invalid file at %s\n",outputFilename);
         exit(-2);
     }
-    g.write(ofs);
+    g.writeTruncated(ofs);
     ofs.close();
 
     

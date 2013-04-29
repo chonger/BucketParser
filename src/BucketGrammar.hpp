@@ -170,6 +170,29 @@ struct ParseTree {
         return r;
     }
 
+    vector<ParseTree*> rules() {
+        vector<ParseTree*> ret;
+        vector<pair<TreeNode*,int> > ns = nodes();
+        for(size_t i=0;i<ns.size();++i) {
+            vector<TreeNode*> ruleK;
+            TreeNode* n = ns[i].first;
+            int tI = ns[i].second;
+            vector<string> t;
+            if(n->k.size() == 0) {
+                t.push_back(terms[tI]);
+            } else {
+                for(size_t j=0;j<n->k.size();++j) {
+                    TreeNode* nn = n->k[j];
+                    vector<TreeNode*> kk;
+                    ruleK.push_back(new TreeNode(nn->sym,kk));
+                    t.push_back("<>");
+                }
+            }
+            ret.push_back(new ParseTree(new TreeNode(n->sym,ruleK),t));
+        }
+        return ret;
+    }
+    
     void recNodes(TreeNode* n, int& tInd, vector<pair<TreeNode*,int> >& ret) {
 
         if(n->k.size() == 0) {//terminal
