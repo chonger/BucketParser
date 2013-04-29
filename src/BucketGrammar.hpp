@@ -93,12 +93,18 @@ struct ParseTree {
     }
     */
 
-    ParseTree(string x) : root(NULL), terms(), hashv(x) {
+    static int id;
 
+    //int myID;
+    
+    ParseTree(string x) : root(NULL), terms(), hashv(x) {
+        //myID = id++;
+        //printf("!CREATE ID : %d\n",myID);
     }
     
     ParseTree(TreeNode* root_, vector<string> terms_) : root(root_), terms(terms_), hashv("") {
-
+        //myID = id++;
+        //        printf("CREATE ID : %d\n",myID);
     }
 
     void setHashString(string* syms) {
@@ -122,6 +128,7 @@ struct ParseTree {
     }
     
     ~ParseTree() {
+        //printf("DELETE ID : %d\n",myID);
         delete root;
     }
 
@@ -214,10 +221,11 @@ struct ParseTree {
 };
 
 
+
 struct ParseTreeEq {
   bool operator()(ParseTree* const& a, ParseTree* const& b ) const
   {
-      a->hashv == b->hashv;
+      return a->hashv == b->hashv;
   }
 };
 

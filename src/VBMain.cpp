@@ -63,15 +63,15 @@ int main(int argc, const char* argv[]) {
     }
     */
     
-    for(unsigned int i=0;i<10 && cont;++i) {
-        for(unsigned int j=0;j<20;++j) {
+    for(unsigned int i=0;i<2 && cont;++i) {
+        for(unsigned int j=0;j<2;++j) {
             q = false;
             printf("%u - %e\n",i+1,vb.emIter(true));
         }
         vb.reformGrammar();
     }
-
-    for(unsigned int j=0;j<20;++j) {
+     
+    for(unsigned int j=0;j<2;++j) {
         q = false;
         printf("%e\n",vb.emIter(true));
     }

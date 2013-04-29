@@ -17,8 +17,8 @@ COREOBJS=$(addsuffix .o,$(addprefix $(OBJDIR),$(CORE))) #$(addprefix $(ECDIR),$(
 LIBS=-lgsl -lgslcblas -lm -pthread -lpthread #-lboost_thread
 INCLUDE=-I../lib/sparsehash/include -I/home/chonger/Downloads/maxent-master/src 
 
-FLAGS=-g
-#FLAGS=-O3
+#FLAGS=-g
+FLAGS=-O5
 CXX=g++
 
 $(OBJDIR)%.o: %.cpp %.hpp

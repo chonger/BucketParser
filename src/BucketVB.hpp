@@ -62,6 +62,7 @@ public:
                 treemap[iter->first] = p;
                 pLeft[b] -= p;
             } else {
+                delete iter->first;
                 //printf("DROP : %s\n",iter->first->hashv.c_str());
             }
         }
@@ -103,7 +104,13 @@ public:
                                 pt->setHashString(gr.syms);
                                 double stickW = .25; //TODO - sample this from a BETa
                                 double myP = pLeft[cur->sym] * stickW;
-                                treemap[pt] = myP;
+                                T2Dmap::iterator findo = treemap.find(pt);
+                                if(findo == treemap.end()) {
+                                    treemap[pt] = myP;
+                                } else {
+                                    treemap[pt] += myP;
+                                    delete pt;
+                                }
                                 pLeft[cur->sym] -= myP;
                                 assert(pLeft > 0);
                             }    

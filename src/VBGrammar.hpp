@@ -76,11 +76,11 @@ public:
         for(unsigned int i=nSym;i<nSym*2;++i) { //map the primed syms to the base
             baseSym.push_back(i-nSym);
         }
-
+        /**
         for(size_t i=0;i<nSym;++i) {
             printf("%s\n",syms[i].c_str());
         }
-
+        */
         printf("Reading training trees\n");
         while(trainifs.good()){
             string treeS;
@@ -114,7 +114,7 @@ public:
             initProbs.push_back(prob);
         }
         ifs.close();
-
+        
         makeTransform(initTreez,initProbs);
 
         /**
@@ -198,6 +198,8 @@ public:
     
         
     void makeTransform(vector<ParseTree*> tsgs, vector<double> probs) {
+
+        
         
         //this one maps terminals to the base symbols
         S2Setmap pt2base;
@@ -225,6 +227,8 @@ public:
         for(size_t i=0;i<nSym;++i) {
             alpha[i] = 1.0;
         }
+
+        
         
         for(size_t i=0;i<tsgs.size();++i) {
             ParseTree* pt = tsgs[i];
@@ -233,8 +237,9 @@ public:
             unsigned int index = getRule(pt->root,titer);
             tsgP[index] = probs[i];
             assert(probs[i] > 0);
+
             ruleTreez[pt] = index;
-            //printf("index tsg - %u\n",index);
+            //            printf("index tsg - %u\n",index);
             alpha[baseSym[index]] -= probs[i];
             if(alpha[baseSym[index]] <= 0)
                 printf("TOO MUCH PROB at %s - %f\n",syms[baseSym[index]].c_str(),alpha[baseSym[index]]);
