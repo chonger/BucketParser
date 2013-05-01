@@ -78,10 +78,21 @@ public:
         for(size_t i=0;i<gr.nSym;++i) {
             alphaE[i] = 0.0;
         }
+
+        unsigned int inds[gr.trainTreez.size()];
+        for(size_t i=0;i<gr.trainTreez.size();++i) {
+            inds[i] = i; 
+        }
+        for(size_t i=0;i<gr.trainTreez.size();++i) {
+            unsigned int pick = i + (rand() % (gr.trainTreez.size() - i));
+            unsigned int tmp = inds[i];
+            inds[i] = inds[pick];
+            inds[pick] = tmp;
+        }
         
         //add rules by sampling from estimated trees
-        for(vector<ParseTree*>::iterator iter = gr.trainTreez.begin();iter != gr.trainTreez.end();++iter) {
-            ParseTree* tree = *iter;
+        for(size_t i=0;i<gr.trainTreez.size();++i) {
+            ParseTree* tree = gr.trainTreez[inds[i]];
             pair<vector<EMItem*>,double> res = insideOutside(tree,tsgE,alphaE);
 
             //tree->setHashString(gr.syms);
